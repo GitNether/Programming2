@@ -1,16 +1,18 @@
 package tl.prog2.exercises.set07;
 
-public class MyDeque<T> {
+import java.util.Iterator;
+
+public class MyDeque<T extends Comparable<T>> implements Iterable<T> {
 
     T[] array;
     int startindex = 0, endindex = 0, capacity;
 
     public MyDeque(int capacity) {
         this.capacity = capacity;
-        array = (T[]) new Object[capacity];
+        array = (T[]) new Comparable[capacity];
     }
 
-    boolean isEmpty() {
+    public boolean isEmpty() {
         boolean ret = true;
         for(T elem : array) {
             if(elem!=null) { ret = false; }
@@ -18,7 +20,7 @@ public class MyDeque<T> {
         return ret;
     }
 
-    boolean isFull() {
+    public boolean isFull() {
         boolean ret = true;
         for(T elem : array) {
             if(elem==null) { ret = false; }
@@ -26,7 +28,7 @@ public class MyDeque<T> {
         return ret;
     }
 
-    int size() {
+    public int size() {
         int size = 0;
         for(T elem : array) {
             if(elem!=null) { size++; }
@@ -34,30 +36,32 @@ public class MyDeque<T> {
         return size;
     }
 
-    int capacity() {
+    public int capacity() {
         return capacity;
     }
 
-    T get (int i) {
+    public T get (int i) {
         return array[(startindex+i)%capacity];
     }
 
-    void addFirst(T elem) {
+    public void addFirst(T elem) {
         int index = startindex-1;
+        if(isEmpty()) { index = 0; }
         if(index<0) { index += capacity; }
         if(!(isFull())) {
             array[index] = elem;
             startindex = index;
+            if(endindex==index) { endindex = startindex; }
         } else {
             throw new RuntimeException("Cannot override data!");
         }
     }
 
-    T getFirst() {
+    public T getFirst() {
         return array[startindex];
     }
 
-    T removeFirst() {
+    public T removeFirst() {
         T temp = array[startindex];
         array[startindex] = null;
         if(isEmpty()) { startindex = 0; endindex = 0; }
@@ -65,38 +69,69 @@ public class MyDeque<T> {
         return temp;
     }
 
-    void addLast(T elem) {
+    public void addLast(T elem) {
         int index = (endindex+1)%capacity;
+        if(isEmpty()) { index = 0; startindex = 0; endindex = 0; }
         if(!(isFull())) {
-            array[endindex] = elem;
+            array[index] = elem;
             endindex = index;
+            if(startindex == index) { startindex = endindex; }
         } else {
             throw new RuntimeException("Cannot override data!");
         }
     }
 
-    T getLast() {
+    public T getLast() {
         return array[endindex];
     }
 
-    T removeLast() {
+    public T removeLast() {
         T temp = array[endindex];
         array[endindex] = null;
         if(isEmpty()) { startindex = 0; endindex = 0; }
-        else { endindex = startindex-1; if(endindex<0) { endindex += capacity; } }
+        else { endindex = (endindex-1)%capacity; if(endindex<0) { endindex += capacity; } }
         return temp;
     }
 
     public String toString() {
-        String s = "Capacity: " + capacity + " | Size: " + size() + "\n";
+        /*String s = "Capacity: " + capacity + " | Size: " + size() + "\n";
         if(isEmpty()){
-            s += "Array empty.";
+            s = s + "Array empty.";
         } else {
-            System.out.println("Elements:");
+            s = s + "Elements:\n";
             for(int i=0; i<capacity; i++) {
-                System.out.println(i + " " + array[i].toString());
+                s = s + i + ": " + array[i] + "\n";
             }
         }
-        return s;
+        return s;*/
+
+        /*
+        String s = "[ ";
+        for(T elem : array) {       // <= Ausgabe wie das Array grad aussieht
+            s += elem + " ";
+        }
+        return s+="]";
+        */
+
+        String s = "[ ";
+        for(int i=capacity; i<capacity+size(); i++){    // <= Ausgabe wie der Ringbuffer aussieht
+            s += get(i%capacity) + " ";
+        }
+        return s + "]";
+    }
+
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+            private int index = 0;
+            @Override
+            public boolean hasNext() {
+                return MyDeque.this.get(index)!=null;
+            }
+
+            @Override
+            public T next() {
+                return MyDeque.this.get((index++)%MyDeque.this.capacity());
+            }
+        };
     }
 }
